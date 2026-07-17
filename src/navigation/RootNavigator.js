@@ -11,6 +11,7 @@ import ThemeDetailScreen from '../screens/ThemeDetailScreen';
 import FlashcardScreen from '../screens/FlashcardScreen';
 import QuizScreen from '../screens/QuizScreen';
 import { colors } from '../theme/colors';
+import { useLocale } from '../context/LocaleContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -22,6 +23,7 @@ function TabIcon({ symbol, focused }) {
 }
 
 function Tabs() {
+  const { t } = useLocale();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -33,23 +35,33 @@ function Tabs() {
       <Tab.Screen
         name="Start"
         component={HomeScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon symbol="🏠" focused={focused} /> }}
+        options={{
+          tabBarLabel: t.tabStart,
+          tabBarIcon: ({ focused }) => <TabIcon symbol="🏠" focused={focused} />,
+        }}
       />
       <Tab.Screen
         name="Themen"
         component={ThemesScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon symbol="📚" focused={focused} /> }}
+        options={{
+          tabBarLabel: t.tabThemes,
+          tabBarIcon: ({ focused }) => <TabIcon symbol="📚" focused={focused} />,
+        }}
       />
       <Tab.Screen
         name="Prüfungen"
         component={ReviewScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon symbol="📝" focused={focused} /> }}
+        options={{
+          tabBarLabel: t.tabReview,
+          tabBarIcon: ({ focused }) => <TabIcon symbol="📝" focused={focused} />,
+        }}
       />
     </Tab.Navigator>
   );
 }
 
 export default function RootNavigator() {
+  const { t } = useLocale();
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerTintColor: colors.primary }}>
@@ -57,17 +69,17 @@ export default function RootNavigator() {
         <Stack.Screen
           name="ThemeDetail"
           component={ThemeDetailScreen}
-          options={({ route }) => ({ title: route.params?.themeName || 'Thema' })}
+          options={({ route }) => ({ title: route.params?.themeName || '' })}
         />
         <Stack.Screen
           name="Flashcards"
           component={FlashcardScreen}
-          options={{ title: 'Lernen', headerBackTitle: 'Abbrechen' }}
+          options={{ title: t.continueLearning, headerBackTitle: t.back }}
         />
         <Stack.Screen
           name="Quiz"
           component={QuizScreen}
-          options={{ title: 'Prüfung', headerBackTitle: 'Abbrechen' }}
+          options={{ title: t.tabReview, headerBackTitle: t.back }}
         />
       </Stack.Navigator>
     </NavigationContainer>

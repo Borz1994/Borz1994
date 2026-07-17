@@ -1,34 +1,37 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, Pressable } from 'react-native';
 import { useProgress } from '../context/ProgressContext';
-import { THEMES, BLOCK_SIZE } from '../data/themes';
+import { useLocale } from '../context/LocaleContext';
+import { THEMES, themeName } from '../data/themes';
 import { TOTAL_WORDS } from '../data/words';
 import { findNextBlock, getBlocksForTheme } from '../utils/blocks';
 import { isYesterday, isWithinLastWeek, isWithinLastMonth } from '../utils/dateHelpers';
 import ProgressBar from '../components/ProgressBar';
 import PrimaryButton from '../components/PrimaryButton';
+import LanguageSwitch from '../components/LanguageSwitch';
 import { colors, radius, spacing } from '../theme/colors';
 
 export default function HomeScreen({ navigation }) {
   const { learned, isLoaded } = useProgress();
+  const { t, locale } = useLocale();
 
   const learnedCount = Object.keys(learned).length;
   const timestamps = Object.values(learned);
 
   const stats = useMemo(() => {
     return {
-      yesterday: timestamps.filter((t) => isYesterday(t)).length,
-      week: timestamps.filter((t) => isWithinLastWeek(t)).length,
-      month: timestamps.filter((t) => isWithinLastMonth(t)).length,
+      yesterday: timestamps.filter((ts) => isYesterday(ts)).length,
+      week: timestamps.filter((ts) => isWithinLastWeek(ts)).length,
+      month: timestamps.filter((ts) => isWithinLastMonth(ts)).length,
     };
   }, [timestamps]);
 
   const nextBlock = useMemo(() => {
     if (!isLoaded) return null;
-    return findNextBlock(THEMES.map((t) => t.id), learned);
+    return findNextBlock(THEMES.map((theme) => theme.id), learned);
   }, [isLoaded, learned]);
 
-  const nextTheme = nextBlock ? THEMES.find((t) => t.id === nextBlock.themeId) : null;
+  const nextTheme = nextBlock ? THEMES.find((theme) => theme.id === nextBlock.themeId) : null;
 
   function goToNextBlock() {
     if (!nextBlock) return;
@@ -41,14 +44,19 @@ export default function HomeScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Deutsch Grundwortschatz</Text>
-        <Text style={styles.subtitle}>3000 Vokabeln für den Alltagsdialog</Text>
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>{t.appTitle}</Text>
+            <Text style={styles.subtitle}>{t.appSubtitle}</Text>
+          </View>
+          <LanguageSwitch />
+        </View>
 
         <View style={styles.progressCard}>
           <Text style={styles.progressNumber}>
             {learnedCount} / {TOTAL_WORDS || 3000}
           </Text>
-          <Text style={styles.progressLabel}>Wörter gelernt</Text>
+          <Text style={styles.progressLabel}>{t.wordsLearned}</Text>
           <View style={{ marginTop: spacing.sm }}>
             <ProgressBar value={learnedCount} total={TOTAL_WORDS || 3000} height={10} />
           </View>
@@ -56,32 +64,30 @@ export default function HomeScreen({ navigation }) {
 
         {nextBlock ? (
           <View style={styles.nextCard}>
-            <Text style={styles.nextLabel}>Weiter geht's mit</Text>
+            <Text style={styles.nextLabel}>{t.continueWith}</Text>
             <Text style={styles.nextTheme}>
-              {nextTheme?.icon} {nextTheme?.name}
+              {nextTheme?.icon} {nextTheme && themeName(nextTheme, locale)}
             </Text>
             <Text style={styles.nextBlock}>
-              Block {nextBlock.blockIndex + 1} von {getBlocksForTheme(nextBlock.themeId).length}
+              {t.block(nextBlock.blockIndex + 1)} / {getBlocksForTheme(nextBlock.themeId).length}
             </Text>
-            <PrimaryButton title="Weiter lernen" onPress={goToNextBlock} style={{ marginTop: spacing.sm }} />
+            <PrimaryButton title={t.continueLearning} onPress={goToNextBlock} style={{ marginTop: spacing.sm }} />
           </View>
         ) : (
           isLoaded && (
             <View style={styles.nextCard}>
-              <Text style={styles.nextTheme}>🎉 Alle {TOTAL_WORDS} Wörter gelernt!</Text>
+              <Text style={styles.nextTheme}>{t.allWordsLearned(TOTAL_WORDS)}</Text>
             </View>
           )
         )}
 
-        <Text style={styles.sectionTitle}>Kürzlich gelernt</Text>
+        <Text style={styles.sectionTitle}>{t.recentlyLearned}</Text>
         <View style={styles.statsRow}>
-          <StatCard label="Gestern" value={stats.yesterday} />
-          <StatCard label="Diese Woche" value={stats.week} />
-          <StatCard label="Diesen Monat" value={stats.month} />
+          <StatCard label={t.yesterday} value={stats.yesterday} />
+          <StatCard label={t.thisWeek} value={stats.week} />
+          <StatCard label={t.thisMonth} value={stats.month} />
         </View>
-        <Text style={styles.hint}>
-          Prüfungen zu diesen Wörtern findest du im Tab „Prüfungen“.
-        </Text>
+        <Text style={styles.hint}>{t.reviewHint}</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -99,8 +105,14 @@ function StatCard({ label, value }) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   container: { padding: spacing.lg, paddingBottom: spacing.xl * 2 },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+  },
   title: { fontSize: 24, fontWeight: '700', color: colors.text },
-  subtitle: { fontSize: 14, color: colors.textMuted, marginTop: 4, marginBottom: spacing.lg },
+  subtitle: { fontSize: 14, color: colors.textMuted, marginTop: 4 },
   progressCard: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,

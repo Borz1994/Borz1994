@@ -3,15 +3,13 @@ import { Pressable, View, Text, StyleSheet } from 'react-native';
 import ProgressBar from './ProgressBar';
 import { colors, radius, spacing } from '../theme/colors';
 
-export default function BlockRow({ index, status, onPress }) {
+export default function BlockRow({ title, subtitle, status, onPress }) {
   const { total, learnedCount, isComplete } = status;
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
       <View style={styles.left}>
-        <Text style={styles.title}>Block {index + 1}</Text>
-        <Text style={styles.subtitle}>
-          {isComplete ? 'Abgeschlossen' : `${learnedCount} / ${total} gelernt`}
-        </Text>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.subtitle}>{subtitle}</Text>
         <View style={{ marginTop: spacing.xs, width: 140 }}>
           <ProgressBar value={learnedCount} total={total} height={6} />
         </View>

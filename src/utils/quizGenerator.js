@@ -15,21 +15,23 @@ function sample(array, n) {
 
 export const MAX_QUIZ_LENGTH = 20;
 
-// Erstellt Multiple-Choice-Fragen: Wort -> richtige Definition unter 3 Distraktoren.
-export function buildQuiz(words, { maxLength = MAX_QUIZ_LENGTH } = {}) {
+// Erstellt Multiple-Choice-Fragen: Wort -> richtige Bedeutung unter 3 Distraktoren.
+// getMeaning bestimmt die angezeigte Sprache (deutsche Definition oder russische Übersetzung).
+export function buildQuiz(words, { maxLength = MAX_QUIZ_LENGTH, getMeaning = (w) => w.definition } = {}) {
   const pool = sample(words, Math.min(maxLength, words.length));
 
   return pool.map((word) => {
+    const correctAnswer = getMeaning(word);
     const distractorPool = ALL_WORDS.filter(
-      (w) => w.id !== word.id && w.definition !== word.definition
+      (w) => w.id !== word.id && getMeaning(w) !== correctAnswer
     );
-    const distractors = sample(distractorPool, 3).map((w) => w.definition);
-    const options = shuffle([word.definition, ...distractors]);
+    const distractors = sample(distractorPool, 3).map((w) => getMeaning(w));
+    const options = shuffle([correctAnswer, ...distractors]);
     return {
       wordId: word.id,
       question: word.word,
       options,
-      correctAnswer: word.definition,
+      correctAnswer,
     };
   });
 }

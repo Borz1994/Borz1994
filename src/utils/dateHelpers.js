@@ -27,8 +27,9 @@ export function isWithinLastMonth(timestamp, referenceNow = Date.now()) {
   return diff >= 0 && diff <= 29;
 }
 
-export function formatDate(timestamp) {
-  return new Date(timestamp).toLocaleDateString('de-DE', {
+export function formatDate(timestamp, locale = 'de') {
+  const intlLocale = locale === 'ru' ? 'ru-RU' : 'de-DE';
+  return new Date(timestamp).toLocaleDateString(intlLocale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',

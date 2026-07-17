@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, SafeAreaView } from 'react-native';
 import { WORD_BY_ID } from '../data/words';
+import { useLocale } from '../context/LocaleContext';
 import { buildQuiz } from '../utils/quizGenerator';
 import PrimaryButton from '../components/PrimaryButton';
 import ProgressBar from '../components/ProgressBar';
@@ -8,12 +9,13 @@ import { colors, radius, spacing } from '../theme/colors';
 
 export default function QuizScreen({ route, navigation }) {
   const { wordIds, title } = route.params;
+  const { t, wordMeaning } = useLocale();
 
   const words = useMemo(
     () => wordIds.map((id) => WORD_BY_ID[id]).filter(Boolean),
     [wordIds]
   );
-  const questions = useMemo(() => buildQuiz(words), [words]);
+  const questions = useMemo(() => buildQuiz(words, { getMeaning: wordMeaning }), [words, wordMeaning]);
 
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -24,8 +26,8 @@ export default function QuizScreen({ route, navigation }) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
-          <Text style={styles.title}>Keine Wörter für eine Prüfung gefunden.</Text>
-          <PrimaryButton title="Zurück" onPress={() => navigation.goBack()} style={{ marginTop: spacing.lg }} />
+          <Text style={styles.title}>{t.noWordsForQuiz}</Text>
+          <PrimaryButton title={t.back} onPress={() => navigation.goBack()} style={{ marginTop: spacing.lg }} />
         </View>
       </SafeAreaView>
     );
@@ -37,10 +39,8 @@ export default function QuizScreen({ route, navigation }) {
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
           <Text style={styles.emoji}>{pct >= 70 ? '🏆' : '💪'}</Text>
-          <Text style={styles.title}>
-            {correctCount} / {questions.length} richtig ({pct}%)
-          </Text>
-          <PrimaryButton title="Fertig" onPress={() => navigation.goBack()} style={{ marginTop: spacing.lg, width: '100%' }} />
+          <Text style={styles.title}>{t.scoreResult(correctCount, questions.length, pct)}</Text>
+          <PrimaryButton title={t.done} onPress={() => navigation.goBack()} style={{ marginTop: spacing.lg, width: '100%' }} />
         </View>
       </SafeAreaView>
     );
@@ -68,12 +68,13 @@ export default function QuizScreen({ route, navigation }) {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <Text style={styles.progressText}>
-          {title ? `${title} · ` : ''}Frage {index + 1} / {questions.length}
+          {title ? `${title} · ` : ''}
+          {t.questionProgress(index + 1, questions.length)}
         </Text>
         <ProgressBar value={index + 1} total={questions.length} />
 
         <View style={styles.questionCard}>
-          <Text style={styles.questionLabel}>Was bedeutet</Text>
+          <Text style={styles.questionLabel}>{t.whatDoesItMean}</Text>
           <Text style={styles.questionWord}>{q.question}</Text>
         </View>
 
@@ -95,7 +96,7 @@ export default function QuizScreen({ route, navigation }) {
         </View>
 
         <PrimaryButton
-          title={isLast ? 'Ergebnis anzeigen' : 'Weiter'}
+          title={isLast ? t.showResult : t.next}
           disabled={!selected}
           onPress={next}
           style={{ marginTop: spacing.md }}

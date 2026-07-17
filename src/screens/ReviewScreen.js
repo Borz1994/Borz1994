@@ -1,12 +1,14 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
 import { useProgress } from '../context/ProgressContext';
+import { useLocale } from '../context/LocaleContext';
 import { isYesterday, isWithinLastWeek, isWithinLastMonth, formatDate } from '../utils/dateHelpers';
 import PrimaryButton from '../components/PrimaryButton';
 import { colors, radius, spacing } from '../theme/colors';
 
 export default function ReviewScreen({ navigation }) {
   const { learned } = useProgress();
+  const { t, locale } = useLocale();
 
   const entries = useMemo(() => Object.entries(learned), [learned]);
 
@@ -17,39 +19,45 @@ export default function ReviewScreen({ navigation }) {
     return { yesterday, week, month };
   }, [entries]);
 
-  const today = formatDate(Date.now());
+  const today = formatDate(Date.now(), locale);
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Prüfungen</Text>
-        <Text style={styles.subtitle}>Heute ist der {today} · Multiple-Choice-Test deiner gelernten Wörter</Text>
+        <Text style={styles.title}>{t.reviewTitle}</Text>
+        <Text style={styles.subtitle}>{t.reviewSubtitle(today)}</Text>
 
         <ReviewCard
           emoji="📆"
-          title="Gestern gelernt"
-          description="Wörter, die du gestern gelernt hast"
+          title={t.yesterdayLearned}
+          description={t.yesterdayDescription}
           count={sections.yesterday.length}
+          noWordsLabel={t.noWordsAvailable}
+          startLabel={t.startQuiz}
           onStart={() =>
-            navigation.navigate('Quiz', { wordIds: sections.yesterday, title: 'Prüfung: Gestern' })
+            navigation.navigate('Quiz', { wordIds: sections.yesterday, title: t.reviewYesterdayTitle })
           }
         />
         <ReviewCard
           emoji="🗓️"
-          title="Diese Woche gelernt"
-          description="Wörter der letzten 7 Tage"
+          title={t.weekLearned}
+          description={t.weekDescription}
           count={sections.week.length}
+          noWordsLabel={t.noWordsAvailable}
+          startLabel={t.startQuiz}
           onStart={() =>
-            navigation.navigate('Quiz', { wordIds: sections.week, title: 'Prüfung: Diese Woche' })
+            navigation.navigate('Quiz', { wordIds: sections.week, title: t.reviewWeekTitle })
           }
         />
         <ReviewCard
           emoji="📅"
-          title="Diesen Monat gelernt"
-          description="Wörter der letzten 30 Tage"
+          title={t.monthLearned}
+          description={t.monthDescription}
           count={sections.month.length}
+          noWordsLabel={t.noWordsAvailable}
+          startLabel={t.startQuiz}
           onStart={() =>
-            navigation.navigate('Quiz', { wordIds: sections.month, title: 'Prüfung: Diesen Monat' })
+            navigation.navigate('Quiz', { wordIds: sections.month, title: t.reviewMonthTitle })
           }
         />
       </ScrollView>
@@ -57,7 +65,7 @@ export default function ReviewScreen({ navigation }) {
   );
 }
 
-function ReviewCard({ emoji, title, description, count, onStart }) {
+function ReviewCard({ emoji, title, description, count, noWordsLabel, startLabel, onStart }) {
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
@@ -69,7 +77,7 @@ function ReviewCard({ emoji, title, description, count, onStart }) {
         <Text style={styles.count}>{count}</Text>
       </View>
       <PrimaryButton
-        title={count === 0 ? 'Keine Wörter verfügbar' : 'Prüfung starten'}
+        title={count === 0 ? noWordsLabel : startLabel}
         disabled={count === 0}
         onPress={onStart}
         style={{ marginTop: spacing.sm }}

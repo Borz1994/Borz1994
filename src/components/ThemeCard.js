@@ -3,17 +3,15 @@ import { Pressable, View, Text, StyleSheet } from 'react-native';
 import ProgressBar from './ProgressBar';
 import { colors, radius, spacing } from '../theme/colors';
 
-export default function ThemeCard({ theme, learnedCount, total, onPress }) {
+export default function ThemeCard({ icon, name, learnedCount, total, countLabel, onPress }) {
   const isComplete = total > 0 && learnedCount === total;
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <View style={styles.row}>
-        <Text style={styles.icon}>{theme.icon}</Text>
+        <Text style={styles.icon}>{icon}</Text>
         <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{theme.name}</Text>
-          <Text style={styles.count}>
-            {learnedCount} / {total} gelernt
-          </Text>
+          <Text style={styles.name}>{name}</Text>
+          <Text style={styles.count}>{countLabel}</Text>
         </View>
         {isComplete && <Text style={styles.badge}>✓</Text>}
       </View>

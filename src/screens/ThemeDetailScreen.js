@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, SafeAreaView } from 'react-native';
 import { useProgress } from '../context/ProgressContext';
+import { useLocale } from '../context/LocaleContext';
 import { getBlocksForTheme, getBlockStatus, getThemeProgress } from '../utils/blocks';
 import BlockRow from '../components/BlockRow';
 import ProgressBar from '../components/ProgressBar';
@@ -9,6 +10,7 @@ import { colors, spacing } from '../theme/colors';
 export default function ThemeDetailScreen({ route, navigation }) {
   const { themeId, themeName } = route.params;
   const { learned } = useProgress();
+  const { t } = useLocale();
 
   const blocks = useMemo(() => getBlocksForTheme(themeId), [themeId]);
   const progress = getThemeProgress(themeId, learned);
@@ -22,8 +24,7 @@ export default function ThemeDetailScreen({ route, navigation }) {
         ListHeaderComponent={
           <View style={{ marginBottom: spacing.md }}>
             <Text style={styles.subtitle}>
-              {progress.learnedCount} / {progress.total} Wörter gelernt · {blocks.length} Blöcke à
-              max. 30
+              {t.themeDetailSubtitle(progress.learnedCount, progress.total, blocks.length)}
             </Text>
             <View style={{ marginTop: spacing.sm }}>
               <ProgressBar value={progress.learnedCount} total={progress.total} height={8} />
@@ -34,7 +35,8 @@ export default function ThemeDetailScreen({ route, navigation }) {
           const status = getBlockStatus(item, learned);
           return (
             <BlockRow
-              index={index}
+              title={t.block(index + 1)}
+              subtitle={status.isComplete ? t.blockComplete : t.blockProgress(status.learnedCount, status.total)}
               status={status}
               onPress={() =>
                 navigation.navigate('Flashcards', { themeId, blockIndex: index, themeName })

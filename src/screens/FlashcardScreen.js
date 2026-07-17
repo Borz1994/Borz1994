@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, SafeAreaView } from 'react-native';
 import { useProgress } from '../context/ProgressContext';
+import { useLocale } from '../context/LocaleContext';
 import { getBlocksForTheme, getBlockStatus } from '../utils/blocks';
 import PrimaryButton from '../components/PrimaryButton';
 import ProgressBar from '../components/ProgressBar';
@@ -9,6 +10,7 @@ import { colors, radius, spacing } from '../theme/colors';
 export default function FlashcardScreen({ route, navigation }) {
   const { themeId, blockIndex } = route.params;
   const { learned, markWordsLearned } = useProgress();
+  const { t, typeLabel, wordMeaning } = useLocale();
 
   const block = useMemo(() => getBlocksForTheme(themeId)[blockIndex] || [], [themeId, blockIndex]);
   const status = useMemo(() => getBlockStatus(block, learned), [block, learned]);
@@ -25,8 +27,8 @@ export default function FlashcardScreen({ route, navigation }) {
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
           <Text style={styles.emoji}>✅</Text>
-          <Text style={styles.title}>Block bereits abgeschlossen</Text>
-          <PrimaryButton title="Zurück" onPress={() => navigation.goBack()} style={{ marginTop: spacing.lg }} />
+          <Text style={styles.title}>{t.blockAlreadyComplete}</Text>
+          <PrimaryButton title={t.back} onPress={() => navigation.goBack()} style={{ marginTop: spacing.lg }} />
         </View>
       </SafeAreaView>
     );
@@ -36,10 +38,8 @@ export default function FlashcardScreen({ route, navigation }) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
-          <Text style={styles.title}>Wie viele Wörter möchtest du lernen?</Text>
-          <Text style={styles.subtitle}>
-            {maxCount} von {block.length} Wörtern in diesem Block sind noch offen
-          </Text>
+          <Text style={styles.title}>{t.howManyWords}</Text>
+          <Text style={styles.subtitle}>{t.wordsOpenInBlock(maxCount, block.length)}</Text>
 
           <View style={styles.stepperRow}>
             <Pressable
@@ -58,7 +58,7 @@ export default function FlashcardScreen({ route, navigation }) {
           </View>
 
           <PrimaryButton
-            title={count === 0 ? 'Wähle mindestens 1 Wort' : `${count} Wörter lernen`}
+            title={count === 0 ? t.chooseAtLeastOne : t.learnNWords(count)}
             disabled={count === 0}
             onPress={() => {
               setSession(status.remaining.slice(0, count));
@@ -98,20 +98,20 @@ export default function FlashcardScreen({ route, navigation }) {
           <Pressable style={styles.card} onPress={() => setFlipped((f) => !f)}>
             {!flipped ? (
               <>
-                <Text style={styles.cardType}>{word.type}</Text>
+                <Text style={styles.cardType}>{typeLabel(word.type)}</Text>
                 <Text style={styles.cardWord}>{word.word}</Text>
-                <Text style={styles.cardHint}>Zum Umdrehen tippen</Text>
+                <Text style={styles.cardHint}>{t.tapToFlip}</Text>
               </>
             ) : (
               <>
-                <Text style={styles.cardType}>Bedeutung</Text>
-                <Text style={styles.cardDefinition}>{word.definition}</Text>
-                <Text style={styles.cardHint}>Zum Umdrehen tippen</Text>
+                <Text style={styles.cardType}>{t.meaning}</Text>
+                <Text style={styles.cardDefinition}>{wordMeaning(word)}</Text>
+                <Text style={styles.cardHint}>{t.tapToFlip}</Text>
               </>
             )}
           </Pressable>
 
-          <PrimaryButton title={isLast ? 'Abschließen' : 'Weiter'} onPress={next} />
+          <PrimaryButton title={isLast ? t.finish : t.next} onPress={next} />
         </View>
       </SafeAreaView>
     );
@@ -122,20 +122,20 @@ export default function FlashcardScreen({ route, navigation }) {
     <SafeAreaView style={styles.safe}>
       <View style={styles.center}>
         <Text style={styles.emoji}>🎉</Text>
-        <Text style={styles.title}>{session.length} Wörter gelernt!</Text>
-        <Text style={styles.subtitle}>Sie zählen jetzt zu deinen Prüfungen (gestern/Woche/Monat).</Text>
+        <Text style={styles.title}>{t.nWordsLearned(session.length)}</Text>
+        <Text style={styles.subtitle}>{t.countsForReview}</Text>
         <PrimaryButton
-          title="Prüfung zu diesem Block starten"
+          title={t.startBlockQuiz}
           onPress={() =>
             navigation.replace('Quiz', {
               wordIds: session.map((w) => w.id),
-              title: 'Block-Prüfung',
+              title: t.blockQuizTitle,
             })
           }
           style={{ marginTop: spacing.lg, width: '100%' }}
         />
         <PrimaryButton
-          title="Zur Themenübersicht"
+          title={t.backToThemeOverview}
           variant="outline"
           onPress={() => navigation.goBack()}
           style={{ marginTop: spacing.sm, width: '100%' }}
